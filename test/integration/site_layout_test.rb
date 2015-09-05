@@ -13,7 +13,7 @@ class SiteLayoutTest < ActionDispatch::IntegrationTest
     #テストする
     #Railsは自動的に、?マークに指定した値であるabout_pathを挿入する。
     #a[href=?]は自動的に、<a href"/about"></a>に変換される
-    assert_select "a[href=?]",root_path, count: 1
+    assert_select "a[href=?]",root_path, count: 2
     assert_select "a[href=?]",help_path
     assert_select "a[href=?]",about_path
     assert_select "a[href=?]",contact_path

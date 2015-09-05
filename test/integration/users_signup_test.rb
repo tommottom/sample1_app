@@ -28,6 +28,7 @@ class UsersSignupTest < ActionDispatch::IntegrationTest
                                             password_confirmation: "password" }
    end
    assert_template 'users/show'
+   assert is_logged_in?
    #表示されるビューテンプレートがusrs/showであることが妥当かを試すテスト
  end
 end
