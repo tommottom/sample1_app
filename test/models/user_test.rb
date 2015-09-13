@@ -84,4 +84,8 @@ class UserTest < ActiveSupport::TestCase
     assert_not @user.valid?
     #パスワードが5文字よりも短ければ妥当ではないことを示すテスト
   end
+  
+  test "authenticated? should return false for a user with nil digest" do
+    assert_not @user.authenticated?(:remember, '')
+  end
 end

@@ -1,6 +1,10 @@
 require 'test_helper'
 
 class UsersSignupTest < ActionDispatch::IntegrationTest
+ def setup
+    ActionMailer::Base.deliveries.clear
+ end
+ 
  test 'invalid signup information' do
    get signup_path
    #signup_pathにアクセスした時
@@ -14,21 +18,31 @@ class UsersSignupTest < ActionDispatch::IntegrationTest
    #表示されるビューテンプレートがuser/newであることが妥当かを試すテスト
  end
  
- test 'valid signup information' do
-   get signup_path
-   #signup_pathのページにアクセスしたとき
-   assert_difference 'User.count', 1 do
-   #ブロックで評価された式の戻り値の数値に違いがあるかをテストする 
-   #post_via_redirect　sign-upのpostリクエストを受けた後、users_pathにリダイレクトする
-   #要約 ユーザーのカウント数がuser.countとブロックの戻り値と同等であるかとテスト
-   
-      post_via_redirect users_path, user: { name:  "Example User",
-                                            email: "user@example.com",
-                                            password:              "password",
-                                            password_confirmation: "password" }
-   end
-   assert_template 'users/show'
-   assert is_logged_in?
-   #表示されるビューテンプレートがusrs/showであることが妥当かを試すテスト
- end
+  test "valid signup information with account activation" do
+    get signup_path
+    assert_difference 'User.count', 1 do
+      post users_path, user: { name:  "Example User",
+                               email: "user@example.com",
+                               password:              "password",
+                               password_confirmation: "password" }
+    end
+    assert_equal 1, ActionMailer::Base.deliveries.size
+    user = assigns(:user)
+    assert_not user.activated?
+    # Try to log in before activation.
+    log_in_as(user)
+    assert_not is_logged_in?
+    # Invalid activation token
+    get edit_account_activation_path("invalid token")
+    assert_not is_logged_in?
+    # Valid token, wrong email
+    get edit_account_activation_path(user.activation_token, email: 'wrong')
+    assert_not is_logged_in?
+    # Valid activation token
+    get edit_account_activation_path(user.activation_token, email: user.email)
+    assert user.reload.activated?
+    follow_redirect!
+    assert_template 'users/show'
+    assert is_logged_in?
+  end
 end
